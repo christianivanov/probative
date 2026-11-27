@@ -182,6 +182,8 @@ We are not accepting code contributions yet; see [CONTRIBUTING.md](CONTRIBUTING.
 
 ## Security
 
+Probative is designed around the assumption that every report and PoC is hostile. The [threat model](docs/THREAT_MODEL.md) lists the threats, the controls against each one and the questions still open.
+
 To report a vulnerability **in Probative itself**, see [SECURITY.md](SECURITY.md). Probative is not a reporting channel for vulnerabilities in other projects.
 
 ## Acknowledgements

@@ -13,7 +13,7 @@ Probative runs untrusted code by design, so a few rules are not negotiable:
 - **Never run a PoC or a build script on the host.** All untrusted code runs inside the sandbox. Never mount the Docker socket into a container and never use `--privileged`.
 - **No LLM in the verdict path.** Only the deterministic oracle decides a verdict.
 - **Never log report text or PoC bytes** above the `debug` level. Reports are often under embargo.
-- **Sandbox and recipe changes update the threat model** in the same pull request.
+- **Sandbox and recipe changes update the [threat model](docs/THREAT_MODEL.md)** in the same pull request.
 
 ## Development setup
 

@@ -45,7 +45,7 @@ cargo deny check
 ## Security rules
 
 - Never run PoCs or build scripts on the host. Never mount the Docker socket or use `--privileged`.
-- Any change to sandbox settings or a recipe updates the threat model in the same PR.
+- Any change to sandbox settings, a recipe, the oracle or the verdict format updates [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) in the same commit, keeping every threat linked to its controls.
 - Never log report text or PoC bytes above `debug`.
 - Defensive use only: never generate or extend exploits or PoCs. Fixtures use minimal synthetic bugs.
 - Only the oracle can create a `Decision`; nothing else, and certainly no LLM, may construct or deserialize one.

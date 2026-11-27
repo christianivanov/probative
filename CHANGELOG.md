@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Threat model (`docs/THREAT_MODEL.md`): trust zones, assets, adversaries, 15 threats each linked to its controls, 18 controls with where they are enforced and how they are tested, and three open questions.
 - Cargo workspace (edition 2024, resolver 3) with the crates `probative-cli`, `probative-core`, `probative-build`, `probative-sandbox`, `probative-oracle`, `probative-verdict`, `probative-extract` and `probative-mcp`, all empty for now.
 - Workspace lints: `unsafe` code forbidden; `unwrap()`, `expect()`, `dbg!` and printing denied outside tests; public items must be documented.
 - `deny.toml` for cargo-deny: license allow list, security advisories, banned sources and duplicate versions.

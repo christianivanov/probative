@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Spec v0.3, second part: network PoCs that talk to the project over loopback only (proposed design, threat model T16 and C19); verdicts as a public contract with a third-party verification guide planned; single-binary distribution with signed releases (T17 and C20); a backend-neutral sandbox trait with Firecracker required before running untrusted PoCs at scale (ADR-001); a public benchmark on hundreds of ARVO cases; and ADR-008 on extending Probative to other languages and oracles.
 - Operator-local manual recipes: same isolated build container, only the origin changes; never from a manifest or a report. Verdicts record `recipe_source` and `recipe_sha256` (schema, examples, ADR-006 and threat model C8 updated).
 - Roadmap: first end-to-end reproduction with ARVO images; Markdown summaries and `probative init` in the Verdict phase.
 - JSON Schemas for the manifest (`docs/manifest.schema.json`) and the verdict (`docs/verdict.schema.json`), with 10 valid and 49 invalid examples in `docs/examples/`. A test checks each invalid example is rejected at the expected location.

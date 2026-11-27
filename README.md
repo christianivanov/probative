@@ -41,7 +41,7 @@ Probative automates the reproduction and keeps the judgement objective:
 - **Evidence, not opinion.** A report is `reproduced` only when a sanitizer reports a memory error in the project's own code in at least two of three runs.
 - **Honest about doubt.** Crashes in dependencies, flaky results, timeouts and unsymbolized stacks are `inconclusive`, with a machine-readable reason.
 - **Re-runnable by anyone.** Every verdict pins the commit, the build and run image digests, the PoC hash and the exact command to reproduce it.
-- **Verifiable.** Verdicts are canonical JSON ([RFC 8785](https://www.rfc-editor.org/rfc/rfc8785)) signed with Ed25519, so they can be checked offline and cannot be quietly edited.
+- **Verifiable by third parties.** Verdicts are canonical JSON ([RFC 8785](https://www.rfc-editor.org/rfc/rfc8785)) signed with Ed25519, so they can be checked offline, with independent tools, without trusting whoever produced them.
 
 ## How it works
 
@@ -159,20 +159,24 @@ $ probative check verdict.json --rerun --manifest probative.toml
 
 | Supported (planned for the first release) | Not yet |
 | --- | --- |
-| C and C++ projects that build with clang | Other languages |
+| C and C++ projects that build with clang | Other languages (designed for it; Rust is the first candidate) |
 | AddressSanitizer and UndefinedBehaviorSanitizer findings | Logic bugs, web applications |
-| PoCs as fuzzer inputs, CLI invocations or C/C++ harnesses | PoCs that need a network peer (for example, a malicious server) |
-| Linux x86_64 containers (Docker, Docker rootless, Colima) | arm64 hosts, microVM isolation |
+| PoCs as fuzzer inputs, CLI invocations, C/C++ harnesses, or a server or client that talks to the project over loopback inside the sandbox | PoCs that need the internet or external services |
+| Linux x86_64 containers (Docker, Docker rootless, Colima) | arm64 hosts |
+| A single binary for Linux and macOS, with signed releases | |
 
 ## Roadmap
 
 - [ ] **Design:** [threat model](docs/THREAT_MODEL.md), [architecture decision records](docs/adr/), [manifest](docs/manifest.schema.json) and [verdict](docs/verdict.schema.json) schemas, evaluation plan
 - [ ] **Reproduce:** hardened Docker sandbox, a first end-to-end reproduction with ARVO images, then sanitizer builds from OSS-Fuzz, manual and operator-local recipes
-- [ ] **Verdict:** sanitizer parser, deterministic oracle, deduplication, Ed25519 signing, `check`, public evaluation, Markdown summaries for issues and advisories, and `probative init` to start a manifest
+- [ ] **Verdict:** sanitizer parser, deterministic oracle, deduplication, Ed25519 signing and `check`; harness and network PoCs; a guide to verifying verdicts without trusting their producer; a public benchmark; Markdown summaries for issues and advisories; `probative init`; signed releases (static Linux binary, macOS, Homebrew) and a GitHub Action
 - [ ] **Assist:** optional LLM-assisted manifest drafting and an [MCP](https://modelcontextprotocol.io) server
-- [ ] **Harden:** Firecracker microVM backend, GitHub Security Advisories integration
+- [ ] **Harden:** Firecracker microVM backend, required before running untrusted third-party PoCs at scale; GitHub Security Advisories integration
+- [ ] **Beyond C and C++:** new ecosystems through the same oracle interface ([ADR-008](docs/adr/008-extensibility.md)), starting with Rust, only after the benchmark is public
 
-The evaluation set is built from real, publicly reproducible vulnerabilities. Its success criterion is zero false `reproduced` verdicts.
+### Benchmark
+
+The evaluation set is built from real, publicly reproducible vulnerabilities: hundreds of historical cases from [ARVO](https://github.com/n132/arvo) and real reports against curl. The results will be published with confidence intervals, the number of false `reproduced` verdicts and coverage by PoC type, and anyone will be able to reproduce them with one command. The success criterion is zero false `reproduced` verdicts.
 
 ## Contributing
 

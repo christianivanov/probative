@@ -11,6 +11,7 @@ Each record captures one significant decision: its context, the decision, the al
 | [005](005-license.md) | License: AGPL-3.0-only with a CLA | Proposed |
 | [006](006-recipes-as-trusted-configuration.md) | Build recipes are trusted configuration | Proposed |
 | [007](007-poc-injection-derived-image.md) | Inject the PoC through a derived image | Proposed |
+| [008](008-extensibility.md) | Extensibility to other languages and oracles | Proposed |
 
 **Statuses:** Proposed (under review), Accepted, Superseded (replaced by a later record).
 

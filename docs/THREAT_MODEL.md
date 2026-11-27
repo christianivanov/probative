@@ -82,6 +82,8 @@ Each threat links to the [controls](#controls) that mitigate it. Threats with a 
 | T13 | **Unreviewed code in an allowlisted repository** | A commit pushed to a fork, which hosts like GitHub serve from the upstream repository URL | A1, A3 | [C6](#c6-repository-allowlist-and-pinned-commits), [C7](#c7-isolated-build-zone); see [Q2](#q2-commits-that-only-exist-in-a-fork) |
 | T14 | **Network abuse from the build zone** | Build scripts that scan the local network or query cloud metadata endpoints | A1, A5 | [C7](#c7-isolated-build-zone), [C17](#c17-hardened-deployment); see [Q3](#q3-network-access-during-builds) |
 | T15 | **Supply chain of Probative itself** | A compromised dependency or CI action | A1, A2, A3 | [C18](#c18-supply-chain-of-probative) |
+| T16 | **Abuse from a network PoC** | A PoC that acts as a server or client tries to reach the internet, attack the target process, or fake its sanitizer output | A1, A3, A4 | [C19](#c19-network-pocs-share-only-loopback), [C1](#c1-no-network-in-the-run-zone), [C2](#c2-least-privilege-containers); see [Q1](#q1-fake-sanitizer-reports) |
+| T17 | **Tampered release binaries** | A modified `probative` binary distributed as an official release | A1, A2, A3 | [C20](#c20-signed-releases), [C18](#c18-supply-chain-of-probative) |
 
 ## Controls
 
@@ -91,6 +93,7 @@ Each control names where it will be enforced and how it will be tested.
 
 - The run container uses `network_mode = none`. The derived image that adds the PoC is also built with networking disabled.
 - The build container never runs the PoC, so the PoC never shares a container with network access.
+- Network PoCs keep this guarantee: the target and the PoC share only a loopback interface, with no route out ([C19](#c19-network-pocs-share-only-loopback)).
 - **Enforced in:** `probative-sandbox`. **Tested by:** a containment test in which a PoC tries to connect to `1.1.1.1:443` and must fail without any traffic leaving the host.
 
 ### C2: Least-privilege containers
@@ -198,7 +201,7 @@ Each control names where it will be enforced and how it will be tested.
 - Linux hosts should run Docker in rootless mode, so a container escape lands in an unprivileged account. On macOS, Docker Desktop and Colima already run containers inside a virtual machine.
 - Probative refuses to run on non-x86_64 hosts instead of emulating them.
 - Membership in the `docker` group is equivalent to root. Hosts running Probative should be dedicated to it, or at least keep that group restricted.
-- A microVM backend (Firecracker) is planned so that each run gets its own kernel.
+- A microVM backend (Firecracker) gives each run its own kernel. It is required before Probative runs untrusted third-party PoCs at scale, for example when it processes reports from many unrelated sources. Until then, Probative is meant for maintainers verifying reports on their own infrastructure.
 - **Enforced in:** documentation and `probative doctor`. **Tested by:** `probative doctor` checks.
 
 ### C18: Supply chain of Probative
@@ -206,6 +209,22 @@ Each control names where it will be enforced and how it will be tested.
 - Dependencies are checked by `cargo-deny` on every change (security advisories, allowed licenses, crates.io as the only source) and builds use the committed `Cargo.lock`.
 - CI actions are pinned by commit SHA and run with a read-only token.
 - **Enforced in:** CI. **Tested by:** CI itself.
+
+### C19: Network PoCs share only loopback
+
+Proposed design for PoCs of type `network`, pending maintainer approval:
+
+- The target container (the project's binary) is created with no network, which gives it its own network namespace with only a loopback interface and no external routes. The PoC runs in a second container that joins that namespace, so the two share `127.0.0.1` and nothing else.
+- Both containers have every setting of [C2](#c2-least-privilege-containers) to [C5](#c5-clean-execution-environment), and separate process and filesystem namespaces: the PoC cannot see, signal or modify the target process.
+- The PoC is compiled like a harness, in a build container without network and separate from the project build, because it is untrusted code.
+- Only the target container's output is analyzed. The PoC's output is counted and discarded, so it cannot fake a sanitizer report.
+- **Enforced in:** `probative-sandbox`. **Tested by:** containment tests in which a network PoC tries to reach `1.1.1.1:443` and resolve a name, tries to see or signal the target process, and prints a fake sanitizer report. All three must fail or be ignored.
+
+### C20: Signed releases
+
+- Release binaries are built only by the release workflow in CI, never on a developer machine, and are published with a `SHA256SUMS` file and signatures.
+- Installation instructions and Probative's own GitHub Action verify the checksum and the signature before running the binary.
+- **Enforced in:** the release workflow. **Tested by:** verifying a release with the published instructions in CI.
 
 ## Open questions
 

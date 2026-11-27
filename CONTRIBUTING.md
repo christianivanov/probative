@@ -53,7 +53,7 @@ Tests that need Docker are marked `#[ignore]` and run with `cargo test -- --igno
 
 ## Contributor License Agreement
 
-All contributions require agreeing to the [Contributor License Agreement](CLA.md). You keep the copyright to your work; the CLA grants the project the rights it needs to distribute it. Tick the CLA box in the pull request template to agree.
+All contributions require agreeing to the [Contributor License Agreement](CLA.md). You keep the copyright to your work. The CLA allows the maintainer to relicense contributions, including under commercial terms, while the project remains available under AGPL-3.0-only. Tick the CLA box in the pull request template to agree.
 
 ## Reporting security issues
 

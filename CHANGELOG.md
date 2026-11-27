@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Architecture decision records ADR-001 to ADR-007 in `docs/adr/`: sandbox backend, deterministic oracle, verdict format, LLM outside the verdict path, license, recipes as trusted configuration and PoC injection through a derived image.
 - Threat model (`docs/THREAT_MODEL.md`): trust zones, assets, adversaries, 15 threats each linked to its controls, 18 controls with where they are enforced and how they are tested, and three open questions.
 - Cargo workspace (edition 2024, resolver 3) with the crates `probative-cli`, `probative-core`, `probative-build`, `probative-sandbox`, `probative-oracle`, `probative-verdict`, `probative-extract` and `probative-mcp`, all empty for now.
 - Workspace lints: `unsafe` code forbidden; `unwrap()`, `expect()`, `dbg!` and printing denied outside tests; public items must be documented.

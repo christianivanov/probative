@@ -166,7 +166,7 @@ $ probative check verdict.json --rerun --manifest probative.toml
 
 ## Roadmap
 
-- [ ] **Design:** threat model, architecture decision records, manifest and verdict schemas, evaluation plan
+- [ ] **Design:** [threat model](docs/THREAT_MODEL.md), [architecture decision records](docs/adr/), manifest and verdict schemas, evaluation plan
 - [ ] **Reproduce:** sanitizer builds from OSS-Fuzz, ARVO and manual recipes; hardened Docker sandbox
 - [ ] **Verdict:** sanitizer parser, deterministic oracle, deduplication, Ed25519 signing, `check`, public evaluation
 - [ ] **Assist:** optional LLM-assisted manifest drafting and an [MCP](https://modelcontextprotocol.io) server

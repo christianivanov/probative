@@ -22,6 +22,13 @@ Probative is a neutral, self-hosted verifier for the people who **receive** vuln
 
 Give it a report about a memory-safety bug in a C or C++ project. Probative builds the affected commit with a sanitizer, runs the proof of concept in a locked-down sandbox, and lets the sanitizer decide whether the bug is real. No person and no language model makes that call. The result is a signed verdict you can attach to an issue, share with the reporter, or hand to anyone who wants to check it for themselves.
 
+```console
+$ probative verify --manifest probative.toml
+reproduced  heap-buffer-overflow (WRITE) in parse_chunk  parser.c
+            3/3 runs, same signature · claim: matches · severity hint: high
+            fixed by 89abcde · verdict 0192c5e0-… signed by 3f9a1c2d4b5e6f70
+```
+
 > [!IMPORTANT]
 > **Probative is in early design and is not usable yet.** This README describes where the project is going. Commands, file formats and outputs may still change. Star or watch the repository to follow along, and see [Roadmap](#roadmap) for progress.
 
@@ -95,14 +102,9 @@ function = "parse_chunk"
 file     = "parser.c"
 ```
 
-## Usage
+## Verdicts
 
-```console
-$ probative verify --manifest probative.toml
-reproduced  heap-buffer-overflow (WRITE) in parse_chunk  parser.c
-            3/3 runs, same signature · claim: matches · severity hint: high
-            fixed by 89abcde · verdict 0192c5e0-… signed by 3f9a1c2d4b5e6f70
-```
+Every `verify` run produces a signed JSON verdict with the outcome, the evidence and everything needed to reproduce it.
 
 <details>
 <summary>Excerpt of the signed verdict (illustrative)</summary>

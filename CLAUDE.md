@@ -39,8 +39,8 @@ cargo deny check
 - Before using a crate's API, check docs.rs **for the version pinned in `Cargo.toml`**. Several dependencies have recent major versions; do not write APIs from memory.
 - Do not add dependencies without justifying them in the PR. Licenses must be in the `deny.toml` allow list.
 - Code, comments, README, ADRs and commit messages in English.
-- One task per branch and per PR, with Conventional Commits and a "Decisions taken" section listing anything the spec left open.
-- Every PR updates `CHANGELOG.md`; no `TODO` without an issue.
+- While the maintainer is the only developer, work directly on `main`: one Conventional Commit per task, with the decisions taken (anything the spec left open) in the commit body and reported to the maintainer. Run all CI checks locally before every push.
+- Every task updates `CHANGELOG.md`; no `TODO` without an issue.
 
 ## Security rules
 

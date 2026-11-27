@@ -68,7 +68,7 @@ flowchart LR
 ```
 
 1. **Describe the case.** A `probative.toml` manifest names the repository, the affected commit, the PoC and, optionally, what the report claims.
-2. **Build.** Probative compiles the commit with AddressSanitizer or UndefinedBehaviorSanitizer using a trusted recipe: an [OSS-Fuzz](https://github.com/google/oss-fuzz) project, an [ARVO](https://github.com/n132/arvo) image for historical cases, or a reviewed manual recipe. Builds are cached by the hash of their inputs.
+2. **Build.** Probative compiles the commit with AddressSanitizer or UndefinedBehaviorSanitizer using a trusted recipe: an [OSS-Fuzz](https://github.com/google/oss-fuzz) project, an [ARVO](https://github.com/n132/arvo) image for historical cases, or a manual recipe, either reviewed in this repository or written by you for your own project. Builds are cached by the hash of their inputs.
 3. **Run.** The PoC runs three times in a container with no network, no secrets, no capabilities and a read-only filesystem, as an unprivileged user with strict resource limits.
 4. **Decide.** A deterministic oracle parses the sanitizer output, separates project frames from runtime and dependency frames, computes a stable deduplication signature and applies a fixed decision table.
 5. **Sign.** The verdict is canonicalized and signed. If a fix commit is given, Probative also checks that the fix makes the crash go away.
@@ -167,8 +167,8 @@ $ probative check verdict.json --rerun --manifest probative.toml
 ## Roadmap
 
 - [ ] **Design:** [threat model](docs/THREAT_MODEL.md), [architecture decision records](docs/adr/), [manifest](docs/manifest.schema.json) and [verdict](docs/verdict.schema.json) schemas, evaluation plan
-- [ ] **Reproduce:** sanitizer builds from OSS-Fuzz, ARVO and manual recipes; hardened Docker sandbox
-- [ ] **Verdict:** sanitizer parser, deterministic oracle, deduplication, Ed25519 signing, `check`, public evaluation
+- [ ] **Reproduce:** hardened Docker sandbox, a first end-to-end reproduction with ARVO images, then sanitizer builds from OSS-Fuzz, manual and operator-local recipes
+- [ ] **Verdict:** sanitizer parser, deterministic oracle, deduplication, Ed25519 signing, `check`, public evaluation, Markdown summaries for issues and advisories, and `probative init` to start a manifest
 - [ ] **Assist:** optional LLM-assisted manifest drafting and an [MCP](https://modelcontextprotocol.io) server
 - [ ] **Harden:** Firecracker microVM backend, GitHub Security Advisories integration
 

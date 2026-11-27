@@ -135,10 +135,11 @@ Each control names where it will be enforced and how it will be tested.
 
 ### C8: Recipes are trusted configuration
 
-- Build recipes come only from Probative's own reviewed `recipes/` directory, from a pinned OSS-Fuzz commit or from ARVO images pinned by digest. A report can never supply or modify a recipe.
+- Build recipes come only from Probative's own reviewed `recipes/` directory, the operator's local recipe directory, a pinned OSS-Fuzz commit or ARVO images pinned by digest. A manifest or a report can never supply or modify a recipe: the manifest only names one.
+- Operator-local recipes run in the same isolated build zone as any other recipe ([C7](#c7-isolated-build-zone)); only their origin changes. A name defined both in `recipes/` and locally is a policy error, the local directory and its files must not be writable by group or others, and the verdict records the recipe's origin and SHA-256.
 - OSS-Fuzz projects are built without `infra/helper.py`, which runs privileged containers.
 - Base images are referenced by digest, and Probative adds the sanitizer flags itself.
-- **Enforced in:** `probative-build`. **Tested by:** unit tests that reject unknown recipes and images without a digest.
+- **Enforced in:** `probative-build`. **Tested by:** unit tests that reject unknown recipes, images without a digest, duplicated recipe names and writable local recipe directories, and a re-run test with a changed local recipe.
 
 ### C9: Content-addressed build cache
 

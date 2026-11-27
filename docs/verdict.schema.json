@@ -63,20 +63,37 @@
         "base_image_digest": { "$ref": "#/$defs/imageDigest" },
         "oss_fuzz_commit": { "$ref": "#/$defs/gitSha" },
         "arvo_id": { "type": "string", "pattern": "^[0-9]{1,12}$" },
-        "manual": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" }
+        "manual": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
+        "recipe_source": {
+          "description": "Where the manual recipe came from: Probative's recipes/ directory or the operator's local recipe directory.",
+          "enum": ["builtin", "local"]
+        },
+        "recipe_sha256": {
+          "description": "SHA-256 of the manual recipe file. check --rerun fails if the recipe is missing or differs.",
+          "$ref": "#/$defs/sha256"
+        }
       },
       "allOf": [
         {
           "if": { "required": ["recipe"], "properties": { "recipe": { "const": "oss_fuzz" } } },
-          "then": { "required": ["oss_fuzz_commit"], "properties": { "arvo_id": false, "manual": false } }
+          "then": {
+            "required": ["oss_fuzz_commit"],
+            "properties": { "arvo_id": false, "manual": false, "recipe_source": false, "recipe_sha256": false }
+          }
         },
         {
           "if": { "required": ["recipe"], "properties": { "recipe": { "const": "arvo" } } },
-          "then": { "required": ["arvo_id"], "properties": { "oss_fuzz_commit": false, "manual": false } }
+          "then": {
+            "required": ["arvo_id"],
+            "properties": { "oss_fuzz_commit": false, "manual": false, "recipe_source": false, "recipe_sha256": false }
+          }
         },
         {
           "if": { "required": ["recipe"], "properties": { "recipe": { "const": "manual" } } },
-          "then": { "required": ["manual"], "properties": { "oss_fuzz_commit": false, "arvo_id": false } }
+          "then": {
+            "required": ["manual", "recipe_source", "recipe_sha256"],
+            "properties": { "oss_fuzz_commit": false, "arvo_id": false }
+          }
         }
       ]
     },

@@ -43,6 +43,16 @@ pub enum Lang {
     Cpp,
 }
 
+/// The role a network PoC plays.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NetRole {
+    /// The PoC listens and the project's binary connects to it.
+    Server,
+    /// The project's binary listens and the PoC connects to it.
+    Client,
+}
+
 /// How the reporter found the bug. Informative only.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -204,6 +214,7 @@ mod tests {
         assert_eq!(json(&Access::Write).unwrap(), "\"write\"");
         assert_eq!(json(&Lang::Cpp).unwrap(), "\"cpp\"");
         assert_eq!(json(&FoundWith::LlmAgent).unwrap(), "\"llm_agent\"");
+        assert_eq!(json(&NetRole::Client).unwrap(), "\"client\"");
         assert_eq!(Sanitizer::default(), Sanitizer::Address);
     }
 }

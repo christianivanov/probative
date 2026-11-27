@@ -7,7 +7,7 @@
 
 use serde::Deserialize;
 
-use crate::domain::{Access, BugKind, FoundWith, Lang, Sanitizer};
+use crate::domain::{Access, BugKind, FoundWith, Lang, NetRole, Sanitizer};
 use crate::error::ManifestError;
 use crate::values::{GitSha, RelPath, RepoUrl, Sha256};
 
@@ -22,6 +22,8 @@ pub const MAX_ARG_BYTES: usize = 4096;
 pub const MAX_TEXT_CHARS: usize = 256;
 /// Placeholder in `argv` that is replaced by the PoC path inside the sandbox.
 pub const POC_PLACEHOLDER: &str = "{poc}";
+/// Placeholder in `argv` that is replaced by the loopback port of a network PoC.
+pub const PORT_PLACEHOLDER: &str = "{port}";
 
 /// A validated manifest.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -116,15 +118,32 @@ pub enum PocSpec {
         /// The harness language.
         lang: Lang,
     },
+    /// A C or C++ program that acts as a server or client for the project's
+    /// binary, over a loopback interface shared only by the two.
+    Network {
+        /// The PoC source file, relative to the manifest.
+        file: RelPath,
+        /// Expected SHA-256 of the file.
+        sha256: Option<Sha256>,
+        /// Whether the PoC is the server or the client.
+        role: NetRole,
+        /// The PoC language; it is compiled without network access.
+        lang: Lang,
+        /// The project's binary, as declared by the recipe.
+        binary: String,
+        /// Arguments for the binary; must contain [`PORT_PLACEHOLDER`].
+        argv: Vec<String>,
+    },
 }
 
 impl PocSpec {
     /// The PoC file, relative to the manifest.
     pub fn file(&self) -> &RelPath {
         match self {
-            Self::FuzzInput { file, .. } | Self::Cli { file, .. } | Self::Harness { file, .. } => {
-                file
-            }
+            Self::FuzzInput { file, .. }
+            | Self::Cli { file, .. }
+            | Self::Harness { file, .. }
+            | Self::Network { file, .. } => file,
         }
     }
 
@@ -133,7 +152,8 @@ impl PocSpec {
         match self {
             Self::FuzzInput { sha256, .. }
             | Self::Cli { sha256, .. }
-            | Self::Harness { sha256, .. } => sha256.as_ref(),
+            | Self::Harness { sha256, .. }
+            | Self::Network { sha256, .. } => sha256.as_ref(),
         }
     }
 }
@@ -214,6 +234,7 @@ struct RawPoc {
     argv: Option<Vec<String>>,
     stdin: Option<bool>,
     lang: Option<String>,
+    role: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -307,6 +328,31 @@ fn text(
         Some(v) if v.is_empty() && !allow_empty => Err(invalid(field, "must not be empty")),
         other => Ok(other),
     }
+}
+
+/// Shared `argv` limits for `cli` and `network` PoCs.
+fn check_argv(argv: &[String]) -> Result<(), ManifestError> {
+    if argv.len() > MAX_ARGV {
+        return Err(invalid(
+            "poc.argv",
+            format!("must have at most {MAX_ARGV} elements"),
+        ));
+    }
+    if argv.iter().any(|arg| arg.len() > MAX_ARG_BYTES) {
+        return Err(invalid(
+            "poc.argv",
+            format!("elements must be at most {MAX_ARG_BYTES} bytes"),
+        ));
+    }
+    if argv.iter().any(|arg| arg.contains('\0')) {
+        return Err(invalid("poc.argv", "elements must not contain NUL bytes"));
+    }
+    Ok(())
+}
+
+/// Languages of PoCs that Probative compiles: C and C++ for now.
+fn compiled_lang(value: &str) -> Result<Lang, ManifestError> {
+    enum_value("poc.lang", value, &[("c", Lang::C), ("cpp", Lang::Cpp)])
 }
 
 fn git_sha(field: &'static str, value: String) -> Result<GitSha, ManifestError> {
@@ -439,6 +485,7 @@ impl Manifest {
                 forbid("poc.argv", &raw.argv, WHY)?;
                 forbid("poc.stdin", &raw.stdin, WHY)?;
                 forbid("poc.lang", &raw.lang, WHY)?;
+                forbid("poc.role", &raw.role, WHY)?;
                 let target = required("poc.fuzz_target", raw.fuzz_target, WHY)?;
                 Ok(PocSpec::FuzzInput {
                     file,
@@ -450,24 +497,11 @@ impl Manifest {
                 const WHY: &str = "with type = \"cli\"";
                 forbid("poc.fuzz_target", &raw.fuzz_target, WHY)?;
                 forbid("poc.lang", &raw.lang, WHY)?;
+                forbid("poc.role", &raw.role, WHY)?;
                 let binary = required("poc.binary", raw.binary, WHY)?;
                 let stdin = raw.stdin.unwrap_or(false);
                 let argv = raw.argv.unwrap_or_default();
-                if argv.len() > MAX_ARGV {
-                    return Err(invalid(
-                        "poc.argv",
-                        format!("must have at most {MAX_ARGV} elements"),
-                    ));
-                }
-                if argv.iter().any(|arg| arg.len() > MAX_ARG_BYTES) {
-                    return Err(invalid(
-                        "poc.argv",
-                        format!("elements must be at most {MAX_ARG_BYTES} bytes"),
-                    ));
-                }
-                if argv.iter().any(|arg| arg.contains('\0')) {
-                    return Err(invalid("poc.argv", "elements must not contain NUL bytes"));
-                }
+                check_argv(&argv)?;
                 if !stdin && !argv.iter().any(|arg| arg.contains(POC_PLACEHOLDER)) {
                     return Err(invalid(
                         "poc.argv",
@@ -488,16 +522,45 @@ impl Manifest {
                 forbid("poc.binary", &raw.binary, WHY)?;
                 forbid("poc.argv", &raw.argv, WHY)?;
                 forbid("poc.stdin", &raw.stdin, WHY)?;
+                forbid("poc.role", &raw.role, WHY)?;
                 let lang = required("poc.lang", raw.lang, WHY)?;
                 Ok(PocSpec::Harness {
                     file,
                     sha256: sha,
-                    lang: enum_value("poc.lang", &lang, &[("c", Lang::C), ("cpp", Lang::Cpp)])?,
+                    lang: compiled_lang(&lang)?,
+                })
+            }
+            "network" => {
+                const WHY: &str = "with type = \"network\"";
+                forbid("poc.fuzz_target", &raw.fuzz_target, WHY)?;
+                forbid("poc.stdin", &raw.stdin, WHY)?;
+                let role = required("poc.role", raw.role, WHY)?;
+                let lang = required("poc.lang", raw.lang, WHY)?;
+                let binary = required("poc.binary", raw.binary, WHY)?;
+                let argv = required("poc.argv", raw.argv, WHY)?;
+                check_argv(&argv)?;
+                if !argv.iter().any(|arg| arg.contains(PORT_PLACEHOLDER)) {
+                    return Err(invalid(
+                        "poc.argv",
+                        "must contain {port} somewhere, so the binary uses the loopback port",
+                    ));
+                }
+                Ok(PocSpec::Network {
+                    file,
+                    sha256: sha,
+                    role: enum_value(
+                        "poc.role",
+                        &role,
+                        &[("server", NetRole::Server), ("client", NetRole::Client)],
+                    )?,
+                    lang: compiled_lang(&lang)?,
+                    binary: binary_name("poc.binary", binary)?,
+                    argv,
                 })
             }
             _ => Err(invalid(
                 "poc.type",
-                "must be one of: fuzz_input, cli, harness",
+                "must be one of: fuzz_input, cli, harness, network",
             )),
         }
     }
@@ -1117,6 +1180,132 @@ fuzz_target = "parse_fuzzer"
         );
         let binary = with(HARNESS, "lang = \"c\"", "lang = \"c\"\nbinary = \"tool\"");
         assert_eq!(forbidden_field(&binary), "poc.binary");
+    }
+
+    const NETWORK: &str = r#"
+schema_version = "0.1"
+
+[target]
+repo_url = "https://github.com/example/httpclient"
+commit = "0123456789abcdef0123456789abcdef01234567"
+
+[build]
+recipe = "manual"
+manual = "httpclient-cli"
+
+[poc]
+type = "network"
+role = "server"
+file = "poc/server.c"
+lang = "c"
+binary = "httpclient"
+argv = ["--fetch", "http://127.0.0.1:{port}/"]
+"#;
+
+    #[test]
+    fn parses_network_pocs_in_both_roles() {
+        match parse(NETWORK).unwrap().poc {
+            PocSpec::Network {
+                role,
+                lang,
+                binary,
+                argv,
+                ..
+            } => {
+                assert_eq!(role, NetRole::Server);
+                assert_eq!(lang, Lang::C);
+                assert_eq!(binary, "httpclient");
+                assert_eq!(argv[1], "http://127.0.0.1:{port}/");
+            }
+            other => panic!("expected a network PoC, got {other:?}"),
+        }
+        let client = with(NETWORK, "role = \"server\"", "role = \"client\"");
+        assert!(matches!(
+            parse(&client).unwrap().poc,
+            PocSpec::Network {
+                role: NetRole::Client,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn network_requires_role_lang_binary_and_argv() {
+        assert_eq!(
+            missing_field(&with(NETWORK, "role = \"server\"\n", "")),
+            "poc.role"
+        );
+        assert_eq!(
+            missing_field(&with(NETWORK, "lang = \"c\"\n", "")),
+            "poc.lang"
+        );
+        assert_eq!(
+            missing_field(&with(NETWORK, "binary = \"httpclient\"\n", "")),
+            "poc.binary"
+        );
+        assert_eq!(
+            missing_field(&with(
+                NETWORK,
+                "argv = [\"--fetch\", \"http://127.0.0.1:{port}/\"]\n",
+                ""
+            )),
+            "poc.argv"
+        );
+    }
+
+    #[test]
+    fn network_argv_must_contain_the_port() {
+        let text = with(NETWORK, "{port}", "8080");
+        assert_eq!(invalid_field(&text), "poc.argv");
+        let many = vec!["\"{port}\""; MAX_ARGV + 1].join(", ");
+        let text = with(
+            NETWORK,
+            "[\"--fetch\", \"http://127.0.0.1:{port}/\"]",
+            &format!("[{many}]"),
+        );
+        assert_eq!(invalid_field(&text), "poc.argv");
+    }
+
+    #[test]
+    fn network_rejects_unknown_roles_python_and_foreign_fields() {
+        assert_eq!(
+            invalid_field(&with(NETWORK, "role = \"server\"", "role = \"proxy\"")),
+            "poc.role"
+        );
+        assert_eq!(
+            invalid_field(&with(NETWORK, "lang = \"c\"", "lang = \"python\"")),
+            "poc.lang"
+        );
+        assert_eq!(
+            invalid_field(&with(
+                NETWORK,
+                "binary = \"httpclient\"",
+                "binary = \"/usr/bin/curl\""
+            )),
+            "poc.binary"
+        );
+        let stdin = with(NETWORK, "lang = \"c\"", "lang = \"c\"\nstdin = true");
+        assert_eq!(forbidden_field(&stdin), "poc.stdin");
+        let target = with(NETWORK, "lang = \"c\"", "lang = \"c\"\nfuzz_target = \"x\"");
+        assert_eq!(forbidden_field(&target), "poc.fuzz_target");
+    }
+
+    #[test]
+    fn role_is_only_allowed_for_network_pocs() {
+        let cli = with(
+            CLI,
+            "binary = \"tool\"",
+            "binary = \"tool\"\nrole = \"server\"",
+        );
+        assert_eq!(forbidden_field(&cli), "poc.role");
+        let fuzz = with(
+            BASE,
+            "fuzz_target = \"parse_fuzzer\"",
+            "fuzz_target = \"parse_fuzzer\"\nrole = \"client\"",
+        );
+        assert_eq!(forbidden_field(&fuzz), "poc.role");
+        let harness = with(HARNESS, "lang = \"c\"", "lang = \"c\"\nrole = \"server\"");
+        assert_eq!(forbidden_field(&harness), "poc.role");
     }
 
     // claim and provenance

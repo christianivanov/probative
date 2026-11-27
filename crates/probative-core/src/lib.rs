@@ -13,7 +13,7 @@ mod load;
 pub mod manifest;
 pub mod values;
 
-pub use domain::{Access, BugKind, FoundWith, Lang, Sanitizer};
+pub use domain::{Access, BugKind, FoundWith, Lang, NetRole, Sanitizer};
 pub use error::{ManifestError, ValueError};
 pub use load::{
     DEFAULT_MAX_POC_BYTES, LoadPolicy, LoadedManifest, MAX_MANIFEST_BYTES, PocBundle, load_manifest,

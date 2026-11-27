@@ -1,0 +1,12 @@
+[package]
+name = "probative-build"
+description = "Sanitizer build recipes and build-image cache for Probative."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

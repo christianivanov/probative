@@ -1,0 +1,12 @@
+[package]
+name = "probative-core"
+description = "Core domain types, manifest parsing and configuration for Probative."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,12 @@
+[package]
+name = "probative-extract"
+description = "Optional LLM-assisted drafting of Probative manifests from reports. Never used by verify."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

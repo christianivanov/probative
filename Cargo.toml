@@ -1,0 +1,25 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+repository = "https://github.com/christianivanov/probative"
+readme = "README.md"
+# Nothing is published to crates.io until the maintainers decide otherwise.
+publish = false
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+# No panicking shortcuts outside tests (allowed in tests by clippy.toml).
+unwrap_used = "deny"
+expect_used = "deny"
+dbg_macro = "deny"
+# Only the CLI output module may print; everything else logs with `tracing`.
+print_stdout = "deny"
+print_stderr = "deny"

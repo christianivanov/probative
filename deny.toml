@@ -1,0 +1,45 @@
+# cargo-deny configuration: https://embarkstudios.github.io/cargo-deny/
+# Run locally with `cargo deny check`. CI runs the same check on every PR.
+
+[graph]
+all-features = true
+
+[advisories]
+# Crates with security advisories always fail the check. Yanked versions too.
+yanked = "deny"
+ignore = []
+
+[licenses]
+# Only licenses compatible with AGPL-3.0-only. Adding a license to this list
+# needs explicit maintainer approval.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "MPL-2.0",
+]
+confidence-threshold = 0.93
+unused-allowed-license = "allow"
+exceptions = []
+
+[licenses.private]
+# Workspace crates are AGPL-3.0-only and unpublished (`publish = false`), so
+# they are not checked against the third-party allow list above.
+ignore = true
+
+[bans]
+# Duplicate versions of the same crate are reported; review them in each PR.
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+# Dependencies may only come from crates.io.
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

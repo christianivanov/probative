@@ -1,0 +1,19 @@
+# A malicious client PoC: it connects to the project's server over loopback inside the sandbox.
+schema_version = "0.1"
+
+[target]
+repo_url = "https://github.com/example/tinyserver"
+commit = "0123456789abcdef0123456789abcdef01234567"
+
+[build]
+recipe = "manual"
+sanitizer = "undefined"
+manual = "tinyserver"
+
+[poc]
+type = "network"
+role = "client"
+file = "poc/client.cpp"
+lang = "cpp"
+binary = "tinyserver"
+argv = ["--listen", "127.0.0.1:{port}", "--once"]

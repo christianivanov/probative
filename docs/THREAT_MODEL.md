@@ -201,7 +201,7 @@ Each control names where it will be enforced and how it will be tested.
 - Linux hosts should run Docker in rootless mode, so a container escape lands in an unprivileged account. On macOS, Docker Desktop and Colima already run containers inside a virtual machine.
 - Probative refuses to run on non-x86_64 hosts instead of emulating them.
 - Membership in the `docker` group is equivalent to root. Hosts running Probative should be dedicated to it, or at least keep that group restricted.
-- A microVM backend (Firecracker) gives each run its own kernel. It is required before Probative runs untrusted third-party PoCs at scale, for example when it processes reports from many unrelated sources. Until then, Probative is meant for maintainers verifying reports on their own infrastructure.
+- A microVM backend (Firecracker) gives each run its own kernel. It is required before any use at scale with untrusted third-party PoCs, meaning any use outside the operator's own machine: a service, or an installation for another organization. Until then, Probative is meant for operators verifying reports on their own machine.
 - **Enforced in:** documentation and `probative doctor`. **Tested by:** `probative doctor` checks.
 
 ### C18: Supply chain of Probative
@@ -212,18 +212,20 @@ Each control names where it will be enforced and how it will be tested.
 
 ### C19: Network PoCs share only loopback
 
-Proposed design for PoCs of type `network`, pending maintainer approval:
+Design for PoCs of type `network` (approved; implemented in the Verdict phase):
 
 - The target container (the project's binary) is created with no network, which gives it its own network namespace with only a loopback interface and no external routes. The PoC runs in a second container that joins that namespace, so the two share `127.0.0.1` and nothing else.
 - Both containers have every setting of [C2](#c2-least-privilege-containers) to [C5](#c5-clean-execution-environment), and separate process and filesystem namespaces: the PoC cannot see, signal or modify the target process.
-- The PoC is compiled like a harness, in a build container without network and separate from the project build, because it is untrusted code.
+- The PoC is compiled like a harness, in a build container without network and separate from the project build, because it is untrusted code. Harness PoCs are compiled the same way. For now only C and C++ PoCs are accepted; Python PoCs will come later with a peer image pinned by digest.
+- Probative sets the loopback port, and a server PoC signals that it is ready by printing `PROBATIVE-READY`.
 - Only the target container's output is analyzed. The PoC's output is counted and discarded, so it cannot fake a sanitizer report.
 - **Enforced in:** `probative-sandbox`. **Tested by:** containment tests in which a network PoC tries to reach `1.1.1.1:443` and resolve a name, tries to see or signal the target process, and prints a fake sanitizer report. All three must fail or be ignored.
 
 ### C20: Signed releases
 
-- Release binaries are built only by the release workflow in CI, never on a developer machine, and are published with a `SHA256SUMS` file and signatures.
+- Release binaries are built only by the release workflow in CI, never on a developer machine, and are published with a `SHA256SUMS` file. They are signed with Sigstore keyless signing from GitHub Actions, with build provenance attestations.
 - Installation instructions and Probative's own GitHub Action verify the checksum and the signature before running the binary.
+- The GitHub Action publishes only the verdict and its Markdown summary by default, never PoC output or sandbox logs. Its documentation warns not to use it with embargoed reports in public repositories, whose logs and artifacts are public.
 - **Enforced in:** the release workflow. **Tested by:** verifying a release with the published instructions in CI.
 
 ## Open questions

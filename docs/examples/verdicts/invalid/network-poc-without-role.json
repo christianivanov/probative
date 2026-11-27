@@ -1,0 +1,93 @@
+{
+  "schema_version": "0.1",
+  "id": "0192c5e5-5555-7666-a777-88889999aaaa",
+  "created_at": "2026-11-27T10:15:30Z",
+  "tool_version": "probative 0.1.0",
+  "manifest_sha256": "05b3abf2579a5eb66403cd78be557fd860633a1fe2103c7642030defe32c657f",
+  "target": {
+    "repo_url": "https://github.com/example/httpclient",
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "fix_commit": "89abcdef0123456789abcdef0123456789abcdef"
+  },
+  "build": {
+    "recipe": "manual",
+    "sanitizer": "address",
+    "manual": "httpclient-cli",
+    "recipe_source": "builtin",
+    "recipe_sha256": "7d1a0c5e2f4b6a8c9e0d1f2a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e",
+    "build_image_digest": "sha256:44575cf5b28512d75644bf54a517dcef304ff809fd511747621b4d64f19aac66",
+    "base_image_digest": "sha256:cae662172fd450bb0cd710a769079c05bfc5d8e35efa6576edc7d0377afdd4a2"
+  },
+  "poc": {
+    "type": "network",
+    "sha256": "18889a721a537ee1d9f6de4268a9ccf9f3e59bfebac6441f393996fa66ac80a0",
+    "lang": "c",
+    "binary": "httpclient",
+    "argv": [
+      "--fetch",
+      "http://127.0.0.1:{port}/"
+    ]
+  },
+  "run_image_digest": "sha256:acba25512100f80b56fc3ccd14c65be55d94800cda77585c5f41a887e398f9be",
+  "runs": [
+    {
+      "exit_code": 1,
+      "wall_ms": 812,
+      "oom_killed": false,
+      "timed_out": false,
+      "signature": "888dbab2d734916770c342b59b729711fb392625395e271d4989db454cd5537c",
+      "event": null
+    },
+    {
+      "exit_code": 1,
+      "wall_ms": 798,
+      "oom_killed": false,
+      "timed_out": false,
+      "signature": "888dbab2d734916770c342b59b729711fb392625395e271d4989db454cd5537c",
+      "event": null
+    },
+    {
+      "exit_code": 1,
+      "wall_ms": 805,
+      "oom_killed": false,
+      "timed_out": false,
+      "signature": "888dbab2d734916770c342b59b729711fb392625395e271d4989db454cd5537c",
+      "event": null
+    }
+  ],
+  "outcome": "reproduced",
+  "finding": {
+    "sanitizer": "address",
+    "kind": "heap-buffer-overflow",
+    "access": "write",
+    "top_project_frames": [
+      "parse_header_line",
+      "read_response",
+      "fetch_url"
+    ],
+    "summary_line": "SUMMARY: AddressSanitizer: heap-buffer-overflow /src/httpclient/header.c:88:7 in parse_header_line"
+  },
+  "claim_match": "matches",
+  "severity_hint": {
+    "value": "high",
+    "rationale": "Out-of-bounds write on the heap.",
+    "source": "heuristic"
+  },
+  "fix": {
+    "commit": "89abcdef0123456789abcdef0123456789abcdef",
+    "outcome": "not_reproduced",
+    "fixed_by_commit": true
+  },
+  "dedup_signature": "888dbab2d734916770c342b59b729711fb392625395e271d4989db454cd5537c",
+  "duplicates_of": [],
+  "repro": {
+    "manifest_sha256": "05b3abf2579a5eb66403cd78be557fd860633a1fe2103c7642030defe32c657f",
+    "command": "probative verify --manifest probative.toml"
+  },
+  "signature": {
+    "alg": "ed25519",
+    "key_id": "8e7a7bccedaaf27c",
+    "public_key": "AxCwU6+xIRSh7toFoLz9KfoJMMM85YMSqcRQej4d8uw=",
+    "value": "LdMSrvSxjWlZ+TVLGkogeXz0ppKw3RElBDmytfOj9XORWXoms9JOptIiiCxcjw2LM27WXR/fUdghZar4ed4n+A=="
+  }
+}

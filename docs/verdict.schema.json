@@ -102,25 +102,30 @@
       "additionalProperties": false,
       "required": ["type", "sha256"],
       "properties": {
-        "type": { "enum": ["fuzz_input", "cli", "harness"] },
+        "type": { "enum": ["fuzz_input", "cli", "harness", "network"] },
         "sha256": { "$ref": "#/$defs/sha256" },
         "fuzz_target": { "type": "string", "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.+-]{0,127}$" },
         "binary": { "type": "string", "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.+-]{0,127}$" },
         "argv": { "type": "array", "maxItems": 64, "items": { "type": "string", "maxLength": 4096 } },
-        "lang": { "enum": ["c", "cpp"] }
+        "lang": { "enum": ["c", "cpp"] },
+        "role": { "enum": ["server", "client"] }
       },
       "allOf": [
         {
           "if": { "required": ["type"], "properties": { "type": { "const": "fuzz_input" } } },
-          "then": { "required": ["fuzz_target"], "properties": { "binary": false, "argv": false, "lang": false } }
+          "then": { "required": ["fuzz_target"], "properties": { "binary": false, "argv": false, "lang": false, "role": false } }
         },
         {
           "if": { "required": ["type"], "properties": { "type": { "const": "cli" } } },
-          "then": { "required": ["binary", "argv"], "properties": { "fuzz_target": false, "lang": false } }
+          "then": { "required": ["binary", "argv"], "properties": { "fuzz_target": false, "lang": false, "role": false } }
         },
         {
           "if": { "required": ["type"], "properties": { "type": { "const": "harness" } } },
-          "then": { "required": ["lang"], "properties": { "fuzz_target": false, "binary": false, "argv": false } }
+          "then": { "required": ["lang"], "properties": { "fuzz_target": false, "binary": false, "argv": false, "role": false } }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "network" } } },
+          "then": { "required": ["role", "lang", "binary", "argv"], "properties": { "fuzz_target": false } }
         }
       ]
     },

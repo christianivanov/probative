@@ -88,8 +88,8 @@
       "required": ["type", "file"],
       "properties": {
         "type": {
-          "description": "fuzz_input: input file for a fuzz target. cli: invocation of a binary declared by the recipe. harness: C or C++ program linked against the library.",
-          "enum": ["fuzz_input", "cli", "harness"]
+          "description": "fuzz_input: input file for a fuzz target. cli: invocation of a binary declared by the recipe. harness: C or C++ program linked against the library. network: a C or C++ program that acts as a server or client for the project's binary, over loopback only.",
+          "enum": ["fuzz_input", "cli", "harness", "network"]
         },
         "file": { "$ref": "#/$defs/relPath" },
         "sha256": {
@@ -101,11 +101,11 @@
           "$ref": "#/$defs/binaryName"
         },
         "binary": {
-          "description": "Binary name declared by the recipe, never a path. Required with type = \"cli\".",
+          "description": "Binary name declared by the recipe, never a path. Required with type = \"cli\" or \"network\".",
           "$ref": "#/$defs/binaryName"
         },
         "argv": {
-          "description": "Arguments for the binary. {poc} is replaced by the PoC path inside the sandbox. At most 64 elements of at most 4096 bytes each, without NUL bytes.",
+          "description": "Arguments for the binary. {poc} is replaced by the PoC path inside the sandbox and {port} by the loopback port of a network PoC. At most 64 elements of at most 4096 bytes each, without NUL bytes.",
           "type": "array",
           "maxItems": 64,
           "items": { "type": "string", "maxLength": 4096, "pattern": "^[^\\u0000]*$" }
@@ -116,8 +116,12 @@
           "default": false
         },
         "lang": {
-          "description": "Harness language. Required with type = \"harness\".",
+          "description": "Language of a harness or network PoC, which is compiled without network access. Required with type = \"harness\" or \"network\".",
           "enum": ["c", "cpp"]
+        },
+        "role": {
+          "description": "For network PoCs. server: the PoC listens and the project's binary connects to it. client: the project's binary listens and the PoC connects.",
+          "enum": ["server", "client"]
         }
       },
       "allOf": [
@@ -125,14 +129,14 @@
           "if": { "required": ["type"], "properties": { "type": { "const": "fuzz_input" } } },
           "then": {
             "required": ["fuzz_target"],
-            "properties": { "binary": false, "argv": false, "stdin": false, "lang": false }
+            "properties": { "binary": false, "argv": false, "stdin": false, "lang": false, "role": false }
           }
         },
         {
           "if": { "required": ["type"], "properties": { "type": { "const": "cli" } } },
           "then": {
             "required": ["binary"],
-            "properties": { "fuzz_target": false, "lang": false },
+            "properties": { "fuzz_target": false, "lang": false, "role": false },
             "if": {
               "required": ["stdin"],
               "properties": { "stdin": { "const": true } }
@@ -150,7 +154,18 @@
           "if": { "required": ["type"], "properties": { "type": { "const": "harness" } } },
           "then": {
             "required": ["lang"],
-            "properties": { "fuzz_target": false, "binary": false, "argv": false, "stdin": false }
+            "properties": { "fuzz_target": false, "binary": false, "argv": false, "stdin": false, "role": false }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "network" } } },
+          "then": {
+            "required": ["role", "lang", "binary", "argv"],
+            "properties": {
+              "fuzz_target": false,
+              "stdin": false,
+              "argv": { "contains": { "type": "string", "pattern": "\\{port\\}" } }
+            }
           }
         }
       ]

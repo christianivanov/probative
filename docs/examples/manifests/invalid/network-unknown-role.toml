@@ -1,0 +1,24 @@
+# INVALID: role must be server or client.
+schema_version = "0.1"
+
+[target]
+repo_url = "https://github.com/example/httpclient"
+commit = "0123456789abcdef0123456789abcdef01234567"
+fix_commit = "89abcdef0123456789abcdef0123456789abcdef"
+
+[build]
+recipe = "manual"
+manual = "httpclient-cli"
+
+[poc]
+type = "network"
+role = "proxy"
+file = "poc/server.c"
+lang = "c"
+binary = "httpclient"
+argv = ["--fetch", "http://127.0.0.1:{port}/"]
+
+[claim]
+kind = "heap-buffer-overflow"
+access = "write"
+function = "parse_header_line"

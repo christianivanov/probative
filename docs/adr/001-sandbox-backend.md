@@ -13,7 +13,7 @@ Probative runs untrusted proofs of concept against untrusted builds. It needs st
 - The trait is **backend-neutral from the first version**: images are identified by their OCI digest, and limits and executions are described in Probative's own types, never Docker's. A Firecracker backend can then turn the same OCI image into a microVM root filesystem without changing anything else. A fake backend implements the trait in tests to keep it honest.
 - The first implementation is `DockerBackend`, using the Docker Engine API (through `bollard`). It works with Docker, rootless Docker and Colima, and connects through `DOCKER_HOST` or the platform default.
 - Run containers use a fixed hardened configuration: no network, all capabilities dropped, `no-new-privileges`, default seccomp, unprivileged user, read-only root filesystem with a small `tmpfs`, and memory, CPU, process, file and time limits. These settings are constants, not user configuration. See controls [C1 to C5](../THREAT_MODEL.md#controls).
-- A Firecracker microVM backend gives each run its own kernel. It is **required before Probative is used at scale with untrusted third-party PoCs**, for example when it processes reports from many unrelated sources.
+- A Firecracker microVM backend gives each run its own kernel. It is **required before any use at scale with untrusted third-party PoCs**, meaning any use outside the operator's own machine: a service, or an installation for another organization.
 
 ## Alternatives considered
 

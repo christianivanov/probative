@@ -171,12 +171,12 @@ $ probative check verdict.json --rerun --manifest probative.toml
 - [ ] **Reproduce:** hardened Docker sandbox, a first end-to-end reproduction with ARVO images, then sanitizer builds from OSS-Fuzz, manual and operator-local recipes
 - [ ] **Verdict:** sanitizer parser, deterministic oracle, deduplication, Ed25519 signing and `check`; harness and network PoCs; a guide to verifying verdicts without trusting their producer; a public benchmark; Markdown summaries for issues and advisories; `probative init`; signed releases (static Linux binary, macOS, Homebrew) and a GitHub Action
 - [ ] **Assist:** optional LLM-assisted manifest drafting and an [MCP](https://modelcontextprotocol.io) server
-- [ ] **Harden:** Firecracker microVM backend, required before running untrusted third-party PoCs at scale; GitHub Security Advisories integration
+- [ ] **Harden:** Firecracker microVM backend, required before running untrusted third-party PoCs anywhere other than the operator's own machine; GitHub Security Advisories integration
 - [ ] **Beyond C and C++:** new ecosystems through the same oracle interface ([ADR-008](docs/adr/008-extensibility.md)), starting with Rust, only after the benchmark is public
 
 ### Benchmark
 
-The evaluation set is built from real, publicly reproducible vulnerabilities: hundreds of historical cases from [ARVO](https://github.com/n132/arvo) and real reports against curl. The results will be published with confidence intervals, the number of false `reproduced` verdicts and coverage by PoC type, and anyone will be able to reproduce them with one command. The success criterion is zero false `reproduced` verdicts.
+The evaluation set is built from real, publicly reproducible vulnerabilities: hundreds of historical cases from [ARVO](https://github.com/n132/arvo) and real reports against curl. The results will be published with confidence intervals, the number of false `reproduced` verdicts and coverage by PoC type, and anyone will be able to reproduce them with one command. The success criterion is zero false `reproduced` verdicts. See [docs/BENCHMARK.md](docs/BENCHMARK.md) for the method.
 
 ## Contributing
 

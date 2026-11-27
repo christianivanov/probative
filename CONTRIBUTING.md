@@ -2,7 +2,8 @@
 
 Thanks for your interest in Probative. The project is in its early design phase, so the most useful contributions right now are **feedback on the design**, **real-world sanitizer output** we can use as test fixtures, and **issues** describing how you triage vulnerability reports today.
 
-Before starting on a larger change, please open an issue so we can agree on the approach. It saves everyone time.
+> [!NOTE]
+> **We are not accepting code contributions yet.** Issues, questions and design feedback are very welcome. This guide describes how pull requests will work once we open them.
 
 ## Ground rules
 

@@ -12,4 +12,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Workspace lints: `unsafe` code forbidden; `unwrap()`, `expect()`, `dbg!` and printing denied outside tests; public items must be documented.
 - `deny.toml` for cargo-deny: license allow list, security advisories, banned sources and duplicate versions.
 - GitHub Actions CI (format, clippy, tests, docs, release build and cargo-deny) with actions pinned by commit SHA, plus Dependabot for those actions.
-- Project documents: README, contributing guide, Contributor License Agreement, security policy, pull request template and `CLAUDE.md` for AI coding agents.
+- Project documents: README, contributing guide, Contributor License Agreement, security policy, pull request template and `CLAUDE.md` for AI coding agents. Code contributions are not accepted yet.

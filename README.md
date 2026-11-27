@@ -176,7 +176,7 @@ The evaluation set is built from real, publicly reproducible vulnerabilities. It
 
 Probative is at the stage where design feedback matters most. If you maintain a C or C++ project and triage security reports, we would love to hear how you do it today. Please open an issue.
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before sending a pull request. Contributions require agreeing to the [Contributor License Agreement](CLA.md).
+We are not accepting code contributions yet; see [CONTRIBUTING.md](CONTRIBUTING.md) for how that will work.
 
 ## Security
 

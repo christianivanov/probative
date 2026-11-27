@@ -1,0 +1,17 @@
+# A CLI PoC passed on standard input, so argv does not need {poc}.
+schema_version = "0.1"
+
+[target]
+repo_url = "https://github.com/example/exampletool"
+commit = "0123456789abcdef0123456789abcdef01234567"
+
+[build]
+recipe = "manual"
+manual = "exampletool-cli"
+
+[poc]
+type = "cli"
+file = "poc/input.txt"
+binary = "exampletool"
+argv = ["--parse", "-"]
+stdin = true

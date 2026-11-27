@@ -1,0 +1,15 @@
+# A C++ harness that links against the library.
+schema_version = "0.1"
+
+[target]
+repo_url = "https://github.com/example/libexample"
+commit = "0123456789abcdef0123456789abcdef01234567"
+
+[build]
+recipe = "manual"
+manual = "libexample"
+
+[poc]
+type = "harness"
+file = "poc/harness.cpp"
+lang = "cpp"

@@ -1,0 +1,20 @@
+# A historical case that uses a prebuilt ARVO image instead of building from source.
+schema_version = "0.1"
+
+[target]
+repo_url = "https://github.com/example/libexample"
+commit = "0123456789abcdef0123456789abcdef01234567"
+fix_commit = "89abcdef0123456789abcdef0123456789abcdef"
+
+[build]
+recipe = "arvo"
+arvo_id = "10000001"
+
+[poc]
+type = "fuzz_input"
+file = "poc/testcase"
+fuzz_target = "parse_fuzzer"
+
+[claim]
+kind = "heap-use-after-free"
+access = "read"

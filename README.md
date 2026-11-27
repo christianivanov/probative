@@ -75,7 +75,7 @@ flowchart LR
 
 ## A case in one file
 
-The manifest is the input to Probative and is designed as an open, tool-independent description of a **reproducible vulnerability report**. Anyone can write one by hand.
+The manifest is the input to Probative and is designed as an open, tool-independent description of a **reproducible vulnerability report**. Anyone can write one by hand, and a [JSON Schema](docs/manifest.schema.json) with [examples](docs/examples/) describes every field.
 
 ```toml
 schema_version = "0.1"
@@ -104,7 +104,7 @@ file     = "parser.c"
 
 ## Verdicts
 
-Every `verify` run produces a signed JSON verdict with the outcome, the evidence and everything needed to reproduce it.
+Every `verify` run produces a signed JSON verdict with the outcome, the evidence and everything needed to reproduce it. Its format is defined by a [JSON Schema](docs/verdict.schema.json).
 
 <details>
 <summary>Excerpt of the signed verdict (illustrative)</summary>
@@ -166,7 +166,7 @@ $ probative check verdict.json --rerun --manifest probative.toml
 
 ## Roadmap
 
-- [ ] **Design:** [threat model](docs/THREAT_MODEL.md), [architecture decision records](docs/adr/), manifest and verdict schemas, evaluation plan
+- [ ] **Design:** [threat model](docs/THREAT_MODEL.md), [architecture decision records](docs/adr/), [manifest](docs/manifest.schema.json) and [verdict](docs/verdict.schema.json) schemas, evaluation plan
 - [ ] **Reproduce:** sanitizer builds from OSS-Fuzz, ARVO and manual recipes; hardened Docker sandbox
 - [ ] **Verdict:** sanitizer parser, deterministic oracle, deduplication, Ed25519 signing, `check`, public evaluation
 - [ ] **Assist:** optional LLM-assisted manifest drafting and an [MCP](https://modelcontextprotocol.io) server

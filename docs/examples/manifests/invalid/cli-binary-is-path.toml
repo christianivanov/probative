@@ -1,0 +1,30 @@
+# INVALID: binary must be a name declared by the recipe, never a path.
+schema_version = "0.1"
+
+[target]
+repo_url = "https://gitlab.example.org/tools/exampletool"
+commit = "0123456789abcdef0123456789abcdef01234567"
+
+[build]
+recipe = "manual"
+sanitizer = "undefined"
+manual = "exampletool-cli"
+
+[poc]
+type = "cli"
+file = "poc/input.bin"
+binary = "/bin/sh"
+argv = ["--check", "--input={poc}"]
+
+[claim]
+kind = "signed-integer-overflow"
+function = "compute_size"
+
+[provenance]
+reporter = "Example Reporter"
+found_with = "llm_agent"
+tool = "example-agent"
+model = "example-model"
+
+[extensions.example_tracker]
+ticket = "SEC-123"

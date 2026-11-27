@@ -11,6 +11,15 @@ readme = "README.md"
 # Nothing is published to crates.io until the maintainers decide otherwise.
 publish = false
 
+# Versions pinned to major.minor (see CONTRIBUTING.md). Check the docs.rs page
+# for exactly these versions before using an API.
+[workspace.dependencies]
+# Default features pull in HTTP schema resolution and a TLS stack; Probative
+# never resolves schemas over the network.
+jsonschema = { version = "0.63", default-features = false }
+serde_json = "1.0"
+toml = "1.2"
+
 [workspace.lints.rust]
 unsafe_code = "forbid"
 missing_docs = "warn"

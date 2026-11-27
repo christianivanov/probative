@@ -1,0 +1,15 @@
+# The smallest valid manifest: no fix commit, no claim, default sanitizer (address).
+schema_version = "0.1"
+
+[target]
+repo_url = "https://github.com/example/libexample"
+commit = "0123456789abcdef0123456789abcdef01234567"
+
+[build]
+recipe = "oss_fuzz"
+oss_fuzz_project = "libexample"
+
+[poc]
+type = "fuzz_input"
+file = "crash"
+fuzz_target = "parse_fuzzer"

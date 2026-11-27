@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Probative manifest (probative.toml), version 0.1",
+  "description": "Describes one reproducible memory-safety vulnerability report: the target commit, how to build it, the proof of concept and, optionally, what the report claims. Written in TOML; this schema validates its JSON data model. Paths are relative to the manifest's directory. Some rules can only be checked by Probative itself: symlink resolution, PoC size and hash, argv lengths in bytes, and the repository allowlist.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "target", "build", "poc"],
+  "properties": {
+    "schema_version": {
+      "description": "Manifest format version.",
+      "const": "0.1"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repo_url", "commit"],
+      "properties": {
+        "repo_url": { "$ref": "#/$defs/repoUrl" },
+        "commit": {
+          "description": "Affected commit, as a full SHA-1.",
+          "$ref": "#/$defs/gitSha"
+        },
+        "fix_commit": {
+          "description": "Commit that fixes the bug, if known. Probative checks that the PoC no longer reproduces on it.",
+          "$ref": "#/$defs/gitSha"
+        }
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recipe"],
+      "properties": {
+        "recipe": {
+          "description": "How to build the target with a sanitizer.",
+          "enum": ["oss_fuzz", "arvo", "manual"]
+        },
+        "sanitizer": {
+          "description": "One sanitizer per build.",
+          "enum": ["address", "undefined"],
+          "default": "address"
+        },
+        "oss_fuzz_project": {
+          "description": "OSS-Fuzz project name (projects/<name>). Required with recipe = \"oss_fuzz\".",
+          "$ref": "#/$defs/projectName"
+        },
+        "oss_fuzz_commit": {
+          "description": "OSS-Fuzz commit to use. Defaults to the one pinned in the configuration.",
+          "$ref": "#/$defs/gitSha"
+        },
+        "arvo_id": {
+          "description": "ARVO case identifier. Required with recipe = \"arvo\".",
+          "type": "string",
+          "pattern": "^[0-9]{1,12}$"
+        },
+        "manual": {
+          "description": "Name of a reviewed recipe in Probative's recipes/ directory. Required with recipe = \"manual\".",
+          "$ref": "#/$defs/projectName"
+        }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["recipe"], "properties": { "recipe": { "const": "oss_fuzz" } } },
+          "then": {
+            "required": ["oss_fuzz_project"],
+            "properties": { "arvo_id": false, "manual": false }
+          }
+        },
+        {
+          "if": { "required": ["recipe"], "properties": { "recipe": { "const": "arvo" } } },
+          "then": {
+            "required": ["arvo_id"],
+            "properties": { "oss_fuzz_project": false, "oss_fuzz_commit": false, "manual": false }
+          }
+        },
+        {
+          "if": { "required": ["recipe"], "properties": { "recipe": { "const": "manual" } } },
+          "then": {
+            "required": ["manual"],
+            "properties": { "oss_fuzz_project": false, "oss_fuzz_commit": false, "arvo_id": false }
+          }
+        }
+      ]
+    },
+    "poc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "file"],
+      "properties": {
+        "type": {
+          "description": "fuzz_input: input file for a fuzz target. cli: invocation of a binary declared by the recipe. harness: C or C++ program linked against the library.",
+          "enum": ["fuzz_input", "cli", "harness"]
+        },
+        "file": { "$ref": "#/$defs/relPath" },
+        "sha256": {
+          "description": "Expected SHA-256 of the PoC file. If present and different, verification fails.",
+          "$ref": "#/$defs/sha256"
+        },
+        "fuzz_target": {
+          "description": "Fuzz target binary name in /out. Required with type = \"fuzz_input\".",
+          "$ref": "#/$defs/binaryName"
+        },
+        "binary": {
+          "description": "Binary name declared by the recipe, never a path. Required with type = \"cli\".",
+          "$ref": "#/$defs/binaryName"
+        },
+        "argv": {
+          "description": "Arguments for the binary. {poc} is replaced by the PoC path inside the sandbox. At most 64 elements of at most 4096 bytes each, without NUL bytes.",
+          "type": "array",
+          "maxItems": 64,
+          "items": { "type": "string", "maxLength": 4096, "pattern": "^[^\\u0000]*$" }
+        },
+        "stdin": {
+          "description": "If true, the PoC is passed on standard input.",
+          "type": "boolean",
+          "default": false
+        },
+        "lang": {
+          "description": "Harness language. Required with type = \"harness\".",
+          "enum": ["c", "cpp"]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "fuzz_input" } } },
+          "then": {
+            "required": ["fuzz_target"],
+            "properties": { "binary": false, "argv": false, "stdin": false, "lang": false }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "cli" } } },
+          "then": {
+            "required": ["binary"],
+            "properties": { "fuzz_target": false, "lang": false },
+            "if": {
+              "required": ["stdin"],
+              "properties": { "stdin": { "const": true } }
+            },
+            "else": {
+              "description": "Without stdin, the PoC must reach the binary through argv.",
+              "required": ["argv"],
+              "properties": {
+                "argv": { "contains": { "type": "string", "pattern": "\\{poc\\}" } }
+              }
+            }
+          }
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "harness" } } },
+          "then": {
+            "required": ["lang"],
+            "properties": { "fuzz_target": false, "binary": false, "argv": false, "stdin": false }
+          }
+        }
+      ]
+    },
+    "claim": {
+      "description": "What the report claims. Every field is optional and only affects claim_match in the verdict.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "$ref": "#/$defs/bugKind" },
+        "access": { "enum": ["read", "write"] },
+        "function": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "file": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "provenance": {
+      "description": "Informative only. Never influences the verdict.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reporter": { "type": "string", "maxLength": 256 },
+        "found_with": { "enum": ["fuzzing", "llm_agent", "manual", "other"] },
+        "tool": { "type": "string", "maxLength": 256 },
+        "model": { "type": "string", "maxLength": 256 }
+      }
+    },
+    "extensions": {
+      "description": "Free-form data for other tools. Ignored by probative verify.",
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "gitSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "repoUrl": {
+      "description": "Normalized https URL: lowercase host, no credentials, query, fragment, trailing slash or .git suffix. Must also be on Probative's allowlist.",
+      "type": "string",
+      "maxLength": 2048,
+      "pattern": "^https://[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+(:[0-9]{1,5})?(/[A-Za-z0-9._~-]+)+$",
+      "not": {
+        "anyOf": [
+          { "pattern": "\\.git$" },
+          { "pattern": "/\\.{1,2}(/|$)" }
+        ]
+      }
+    },
+    "relPath": {
+      "description": "Relative path inside the manifest's directory: no absolute paths, no .. components, no backslashes, no NUL bytes.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^[^\\u0000\\\\]+$",
+      "not": {
+        "anyOf": [
+          { "pattern": "^/" },
+          { "pattern": "(^|/)\\.\\.(/|$)" }
+        ]
+      }
+    },
+    "projectName": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+    },
+    "binaryName": {
+      "description": "A file name, never a path.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.+-]{0,127}$"
+    },
+    "bugKind": {
+      "description": "Bug kinds, named as AddressSanitizer names them.",
+      "enum": [
+        "heap-buffer-overflow",
+        "stack-buffer-overflow",
+        "global-buffer-overflow",
+        "heap-use-after-free",
+        "stack-use-after-return",
+        "double-free",
+        "invalid-free",
+        "stack-overflow",
+        "null-deref",
+        "segv-unknown-address",
+        "signed-integer-overflow",
+        "shift",
+        "division-by-zero",
+        "out-of-bounds-index",
+        "misaligned-access",
+        "other"
+      ]
+    }
+  }
+}

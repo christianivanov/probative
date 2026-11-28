@@ -22,3 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `deny.toml` for cargo-deny: license allow list, security advisories, banned sources and duplicate versions.
 - GitHub Actions CI (format, clippy, tests, docs, release build and cargo-deny) with actions pinned by commit SHA, plus Dependabot for those actions.
 - Project documents: README, contributing guide, Contributor License Agreement, security policy, pull request template and `CLAUDE.md` for AI coding agents. Code contributions are not accepted yet.
+
+### Changed
+
+- README redesigned as the project's front page: an illustrative `verify` terminal capture, a trust-zone diagram for light and dark themes (both SVG in `docs/assets/`), a by-hand versus Probative comparison, the three outcomes with their exit codes, the four PoC types, a sample issue summary, a roadmap table and an FAQ.
